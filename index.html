@@ -164,11 +164,11 @@ a-scene{display:block;width:100vw;height:100vh;}
 <div id="badge-pausa">⏸ PAUSADO</div>
 
 <!-- ══ ESCENA AR ══
-  NOTA: Se deja sin atributo arjs inicial
-  AR.js se configurará dinámicamente cuando se obtenga el stream de cámara
+  CLAVE: sourceType: webcam permite que AR.js acceda automáticamente a la cámara
 -->
 <a-scene
   embedded
+  arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono;"
   vr-mode-ui="enabled: false"
   renderer="antialias: true; alpha: true; logarithmicDepthBuffer: true;"
 >
@@ -543,35 +543,19 @@ function loop(){
 
 // ═══════════════════════════════════════════════════════════════
 // SPLASH — PERMISO DE CÁMARA
-// Solicita acceso a la cámara sin cerrar el stream
-// AR.js obtiene automáticamente el stream del elemento video
+// Solo solicita permiso, AR.js accede automáticamente a la cámara
 // ═══════════════════════════════════════════════════════════════
 const splash=document.getElementById('splash');
 const btnIni=document.getElementById('btn-iniciar');
 const splErr=document.getElementById('splash-error');
-const scene=document.querySelector('a-scene');
 
 btnIni.addEventListener('click',async()=>{
   btnIni.textContent='⏳ Solicitando acceso...';
   btnIni.disabled=true;
   try{
-    // Solicitar permiso de cámara (esto muestra el diálogo del navegador)
-    const stream=await navigator.mediaDevices.getUserMedia({
-      video:{facingMode:'environment', width:{ideal:1280}, height:{ideal:720}}
-    });
-    
-    // Crear un elemento video y asignar el stream
-    const video=document.createElement('video');
-    video.srcObject=stream;
-    video.setAttribute('autoplay',true);
-    video.setAttribute('playsinline',true);
-    video.style.display='none';
-    document.body.appendChild(video);
-    
-    // Configurar AR.js con el stream de video
-    scene.setAttribute('arjs','sourceType: webcam; sourceWebcam: '+video.id+'; debugUIEnabled: false; detectionMode: mono;');
-    
-    // Mostrar la escena
+    // Solo solicitar permiso (sin cerrar el stream)
+    await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    // El permiso fue otorgado, ocultar splash
     splash.style.display='none';
     onSlider();
     loop();
