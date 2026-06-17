@@ -117,9 +117,15 @@ a-scene{display:block;width:100vw;height:100vh;}
   border-radius:8px;cursor:pointer;transition:all 0.2s;
 }
 #btn-pausa.pausado{background:#5eead4;color:#0a0c14;}
+
+/* ══ VIDEO OCULTO ══ */
+#ar-video{display:none;}
 </style>
 </head>
 <body>
+
+<!-- ══ VIDEO OCULTO ══ -->
+<video id="ar-video" autoplay playsinline muted></video>
 
 <!-- ══ SPLASH ══ -->
 <div id="splash">
@@ -163,14 +169,12 @@ a-scene{display:block;width:100vw;height:100vh;}
 <!-- ══ BADGE PAUSA ══ -->
 <div id="badge-pausa">⏸ PAUSADO</div>
 
-<!-- ══ ESCENA AR ══
-  CLAVE: sourceType: webcam permite que AR.js acceda automáticamente a la cámara
--->
+<!-- ══ ESCENA AR ══ -->
 <a-scene
   embedded
-  arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono;"
   vr-mode-ui="enabled: false"
   renderer="antialias: true; alpha: true; logarithmicDepthBuffer: true;"
+  arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono;"
 >
   <a-marker preset="hiro" id="marcador">
 
@@ -542,25 +546,36 @@ function loop(){
 }
 
 // ═══════════════════════════════════════════════════════════════
-// SPLASH — PERMISO DE CÁMARA
-// Solo solicita permiso, AR.js accede automáticamente a la cámara
+// SPLASH — PERMISO DE CÁMARA (VERSIÓN CORREGIDA)
 // ═══════════════════════════════════════════════════════════════
 const splash=document.getElementById('splash');
 const btnIni=document.getElementById('btn-iniciar');
 const splErr=document.getElementById('splash-error');
+const video=document.getElementById('ar-video');
 
 btnIni.addEventListener('click',async()=>{
   btnIni.textContent='⏳ Solicitando acceso...';
   btnIni.disabled=true;
   try{
-    // Solo solicitar permiso (sin cerrar el stream)
-    await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-    // El permiso fue otorgado, ocultar splash
+    // PASO 1: Solicitar acceso a cámara
+    const stream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:'environment', width:{ideal:1280}, height:{ideal:720}}
+    });
+    
+    // PASO 2: Asignar stream al elemento video
+    video.srcObject=stream;
+    
+    // PASO 3: Asegurar que el video está reproduciéndose
+    await video.play().catch(e => console.warn('Play error:', e));
+    
+    // PASO 4: Iniciar la simulación
     splash.style.display='none';
     onSlider();
     loop();
   } catch(err){
     splErr.style.display='block';
+    console.error('Error detallado:', err);
+    
     if(err.name==='NotAllowedError')
       splErr.textContent='⚠️ Permiso denegado. Ve a Configuración → Privacidad → Cámara y permite el acceso a esta página, luego recarga.';
     else if(err.name==='NotFoundError')
@@ -571,10 +586,14 @@ btnIni.addEventListener('click',async()=>{
       splErr.textContent='⚠️ Esta página debe estar en HTTPS o localhost para acceder a la cámara.';
     else
       splErr.textContent='⚠️ Error: '+err.message;
+    
     btnIni.textContent='📷 REINTENTAR';
     btnIni.disabled=false;
   }
 });
+
+// Ejecutar inicialización básica sin cámara
+onSlider();
 </script>
 </body>
 </html>
