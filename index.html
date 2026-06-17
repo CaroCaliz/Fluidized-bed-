@@ -164,12 +164,11 @@ a-scene{display:block;width:100vw;height:100vh;}
 <div id="badge-pausa">⏸ PAUSADO</div>
 
 <!-- ══ ESCENA AR ══
-  CLAVE: solo "sourceType: webcam" y "detectionMode: mono"
-  para que el marcador Hiro (tipo mono) sea detectado correctamente.
+  NOTA: Se deja sin atributo arjs inicial
+  AR.js se configurará dinámicamente cuando se obtenga el stream de cámara
 -->
 <a-scene
   embedded
-  arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono;"
   vr-mode-ui="enabled: false"
   renderer="antialias: true; alpha: true; logarithmicDepthBuffer: true;"
 >
@@ -544,18 +543,35 @@ function loop(){
 
 // ═══════════════════════════════════════════════════════════════
 // SPLASH — PERMISO DE CÁMARA
-// getUserMedia explícito para que el navegador muestre el diálogo
+// Solicita acceso a la cámara sin cerrar el stream
+// AR.js obtiene automáticamente el stream del elemento video
 // ═══════════════════════════════════════════════════════════════
 const splash=document.getElementById('splash');
 const btnIni=document.getElementById('btn-iniciar');
 const splErr=document.getElementById('splash-error');
+const scene=document.querySelector('a-scene');
 
 btnIni.addEventListener('click',async()=>{
   btnIni.textContent='⏳ Solicitando acceso...';
   btnIni.disabled=true;
   try{
-    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
-    stream.getTracks().forEach(t=>t.stop());
+    // Solicitar permiso de cámara (esto muestra el diálogo del navegador)
+    const stream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:'environment', width:{ideal:1280}, height:{ideal:720}}
+    });
+    
+    // Crear un elemento video y asignar el stream
+    const video=document.createElement('video');
+    video.srcObject=stream;
+    video.setAttribute('autoplay',true);
+    video.setAttribute('playsinline',true);
+    video.style.display='none';
+    document.body.appendChild(video);
+    
+    // Configurar AR.js con el stream de video
+    scene.setAttribute('arjs','sourceType: webcam; sourceWebcam: '+video.id+'; debugUIEnabled: false; detectionMode: mono;');
+    
+    // Mostrar la escena
     splash.style.display='none';
     onSlider();
     loop();
@@ -565,6 +581,10 @@ btnIni.addEventListener('click',async()=>{
       splErr.textContent='⚠️ Permiso denegado. Ve a Configuración → Privacidad → Cámara y permite el acceso a esta página, luego recarga.';
     else if(err.name==='NotFoundError')
       splErr.textContent='⚠️ No se encontró cámara en este dispositivo.';
+    else if(err.name==='NotReadableError')
+      splErr.textContent='⚠️ La cámara está siendo usada por otra aplicación. Ciérrala e intenta de nuevo.';
+    else if(err.name==='SecurityError')
+      splErr.textContent='⚠️ Esta página debe estar en HTTPS o localhost para acceder a la cámara.';
     else
       splErr.textContent='⚠️ Error: '+err.message;
     btnIni.textContent='📷 REINTENTAR';
@@ -573,4 +593,4 @@ btnIni.addEventListener('click',async()=>{
 });
 </script>
 </body>
-</html># Fluidized-bed-
+</html>
