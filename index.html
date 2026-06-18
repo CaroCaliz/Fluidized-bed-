@@ -3,12 +3,43 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
-  <title>Test Cilindro AR</title>
+  <title>Lecho Fluidizado AR</title>
   <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-  <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ar.js@3.4.5/aframe/build/aframe-ar.js"></script>
   <style>
     html,body{margin:0;overflow:hidden;width:100%;height:100%;}
   </style>
+  <script>
+    // Script para generar partículas dentro del cilindro
+    AFRAME.registerComponent('particle-generator', {
+      init: function() {
+        const entity = this.el;
+        const scene = entity.sceneEl;
+        
+        // Generar partículas aleatorias dentro del cilindro
+        for (let i = 0; i < 30; i++) {
+          const particle = document.createElement('a-sphere');
+          
+          // Posición aleatoria dentro del cilindro
+          const angle = Math.random() * Math.PI * 2;
+          const radius = Math.random() * 0.35; // Radio del cilindro es 0.4
+          const height = Math.random() * 1.8 - 0.9; // Entre -0.9 y 0.9 (altura 1.8)
+          
+          particle.setAttribute('position', {
+            x: Math.cos(angle) * radius,
+            y: height,
+            z: Math.sin(angle) * radius
+          });
+          
+          particle.setAttribute('scale', '0.08 0.08 0.08');
+          particle.setAttribute('color', '#fbbf24');
+          particle.setAttribute('opacity', '0.9');
+          
+          entity.appendChild(particle);
+        }
+      }
+    });
+  </script>
 </head>
 <body>
   <a-scene
@@ -26,32 +57,42 @@
       <!-- Base plana sobre el marcador -->
       <a-cylinder
         position="0 0.05 0"
-        radius="0.5" height="0.1"
-        color="#334155" opacity="0.9">
+        radius="0.45" height="0.1"
+        color="#1f2937" opacity="0.95">
       </a-cylinder>
 
-      <!-- Reactor: caja rectangular en lugar de cilindro
-           Una caja se ve mejor en perspectiva oblicua -->
-      <a-box
+      <!-- Cilindro principal del reactor fluidizado -->
+      <a-cylinder
         id="reactor"
-        position="0 1.2 0"
-        width="1.0" height="2.4" depth="1.0"
-        color="#7dd3fc"
-        opacity="0.08"
-        side="double">
-      </a-box>
-
-      <!-- Bordes visibles de la caja -->
-      <a-box
-        position="0 1.2 0"
-        width="1.02" height="2.42" depth="1.02"
-        color="#5eead4"
+        position="0 1.1 0"
+        radius="0.4" height="1.8"
+        color="#60a5fa"
         opacity="0.3"
-        wireframe="true">
-      </a-box>
+        side="double">
+      </a-cylinder>
 
-      <!-- Cubo rojo de prueba visible dentro -->
-      <a-box position="0 0.5 0" scale="0.3 0.3 0.3" color="red"></a-box>
+      <!-- Bordes del cilindro para mejor visualización -->
+      <a-cylinder
+        position="0 1.1 0"
+        radius="0.42" height="1.82"
+        color="#3b82f6"
+        opacity="0.5"
+        wireframe="true">
+      </a-cylinder>
+
+      <!-- Contenedor para las partículas -->
+      <a-entity
+        id="particles-container"
+        position="0 1.1 0"
+        particle-generator>
+      </a-entity>
+
+      <!-- Tapa superior del cilindro -->
+      <a-cylinder
+        position="0 1.95 0"
+        radius="0.4" height="0.05"
+        color="#374151" opacity="0.8">
+      </a-cylinder>
 
     </a-marker>
     <a-entity
