@@ -297,7 +297,7 @@ function fisica(){
   Ret=rho_f*Ut*dp/mu;
   const TOL=0.004;
   const reg=U<Umf-TOL?'fijo':U<=Umf+TOL?'minima':U<Ut?'fluidizado':'arrastre';
-  const dPmf=H0*(1-em)*(rho_p-rho_f)*g;
+  const dPmf=H0*(1-emf)*(rho_p-rho_f)*g;
   let dP,eps,h,n_rz=0;
   if(E.eps_manual){
     eps=Math.max(E.eps_slider,emf);h=H0*(1-eps0)/(1-eps);
