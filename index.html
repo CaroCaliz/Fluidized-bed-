@@ -579,7 +579,9 @@ document.getElementById('btn-iniciar').addEventListener('click',async()=>{
   const btn=document.getElementById('btn-iniciar'),err=document.getElementById('splash-error');
   btn.textContent='⏳ Solicitando acceso...';btn.disabled=true;
   try{
+    console.log("Intentando abrir cámara...");
     const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    console.log("Cámara concedida");
     s.getTracks().forEach(tr=>tr.stop());
     document.getElementById('splash').style.display='none';
     document.getElementById('panel-top').style.display='flex';
