@@ -282,7 +282,7 @@ function fisica(){
   const Ar=dp**3*rho_f*(rho_p-rho_f)*g/mu**2;
   const mm=dp*1000;
   let emf=mm<=0.05?0.56:mm<=0.07?0.56+(mm-0.05)/0.02*(0.52-0.56):mm<=0.10?0.52+(mm-0.07)/0.03*(0.48-0.52):mm<=0.20?0.48+(mm-0.10)/0.10*(0.44-0.48):mm<=0.30?0.44+(mm-0.20)/0.10*(0.42-0.44):0.42;
-  const eps0=emf;
+  const eps0=0.40; // Lecho empacado //emf se sigue calculando automáticamnete
   const Remf=Math.sqrt(33.7**2+0.0408*Ar)-33.7;
   const Umf=Remf*mu/(rho_f*dp);
   const K=Ar**(1/3);
@@ -297,7 +297,7 @@ function fisica(){
   Ret=rho_f*Ut*dp/mu;
   const TOL=0.004;
   const reg=U<Umf-TOL?'fijo':U<=Umf+TOL?'minima':U<Ut?'fluidizado':'arrastre';
-  const dPmf=H0*(1-eps0)*(rho_p-rho_f)*g;
+  const dPmf=H0*(1-em)*(rho_p-rho_f)*g;
   let dP,eps,h,n_rz=0;
   if(E.eps_manual){
     eps=Math.max(E.eps_slider,emf);h=H0*(1-eps0)/(1-eps);
@@ -369,7 +369,7 @@ let t=0;
 
 function arUpdate(){
   if(E.pausado)return;
-  const{regimen,h,Umf,Ut,U,dp}=E;
+  const{regimen,h,Umf,Ut,U,dp,eps,eps0}=E;
   const col=COLS[regimen];
   const hAR=Math.min(h,0.80);
   const yNivel=0.02+hAR;
@@ -399,9 +399,10 @@ function arUpdate(){
       }
       p.x0=nx;p.y=ny;p.z0=nz;
     }else if(regimen==='fluidizado'){
+      const expansionFactor=1+3*(eps-eps0)/(1-eps0);
       const ratio=Math.min((U-Umf)/Math.max(Ut-Umf,0.01),1.0);
       const spd=0.005+ratio*0.015;
-      ny=p.y+spd;nx=p.x0+Math.sin(t*2+p.fase)*0.010;nz=p.z0+Math.cos(t*1.7+p.fase)*0.006;
+      ny=p.y+spd;nx=expansionFactor*(p.x0+Math.sin(t*2+p.fase))*0.010;nz=expansionFactor*(p.z0+Math.cos(t*1.7+p.fase))*0.006;
       nx=Math.max(-RM,Math.min(nx,RM));
       if(ny>yMax-0.025){ny=YB+Math.random()*0.04;p.x0=(Math.random()-0.5)*RM*1.7;p.z0=(Math.random()-0.5)*0.08;}
       else{p.x0=nx;p.z0=nz;}
